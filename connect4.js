@@ -6,52 +6,59 @@
  */
 
 class Game {
-  constructor(w, h) {
+  constructor(player1, player2, w=6, h=7) {
+    this.players = [player1, player2];
     this.WIDTH = w;
     this.HEIGHT = h;
     this.makeBoard();
     this.makeHtmlBoard();
-    this.currPlayer = 1;
+    this.currPlayer = player1;
+    this.gameOver = false;
   }
 
   makeBoard() {
-    const {WIDTH, HEIGHT} = this;
+//    const {WIDTH, HEIGHT} = this;
     this.board = [];
-    for (let y = 0; y < HEIGHT; y++) {
-      this.board.push(Array.from({ length: WIDTH }));
+    for (let y = 0; y < this.HEIGHT; y++) {
+      this.board.push(Array.from({ length: this.WIDTH }));
 //      console.log(`w = ${WIDTH}, h = ${HEIGHT}, board = ${this.board}`);
     }    
   }
 
   makeHtmlBoard() {
-    const {WIDTH, HEIGHT} = this;        
-    const board = document.getElementById('board');
-  
+//    const {WIDTH, HEIGHT} = this;        
+    const htmlBoard = document.getElementById('board');
+      if(htmlBoard.hasChildNodes()) {
+      alert("CLEAR OLD GAME BOARD!");
+      htmlBoard.replaceChildren("");
+    } 
+    
     // make column tops (clickable area for adding a piece to that column)
     const top = document.createElement('tr');
     top.setAttribute('id', 'column-top');
+
     this.boundClick = this.handleClick.bind(this);
     top.addEventListener('click', this.boundClick);    
   
-    for (let x = 0; x < WIDTH; x++) {
+    for (let x = 0; x < this.WIDTH; x++) {
       const headCell = document.createElement('td');
       headCell.setAttribute('id', x);
       top.append(headCell);
     }
   
-    board.append(top);
+    htmlBoard.append(top);
   
     // make main part of board
-    for (let y = 0; y < HEIGHT; y++) {
+    for (let y = 0; y < this.HEIGHT; y++) {
       const row = document.createElement('tr');
   
-      for (let x = 0; x < WIDTH; x++) {
+      for (let x = 0; x < this.WIDTH; x++) {
         const cell = document.createElement('td');
         cell.setAttribute('id', `${y}-${x}`);
         row.append(cell);
       }
   
-      board.append(row);
+      htmlBoard.append(row);
     }
   }
 
@@ -69,7 +76,8 @@ class Game {
   placeInTable(y, x) {
     const piece = document.createElement('div');
     piece.classList.add('piece');
-    piece.classList.add(`p${this.currPlayer}`);
+    piece.style.backgroundColor = this.currPlayer.color;
+    //piece.classList.add(`p${this.currPlayer}`);
     piece.style.top = -50 * (y + 2);
   
     const spot = document.getElementById(`${y}-${x}`);
@@ -78,9 +86,12 @@ class Game {
 
   endGame(msg) {
     alert(msg);
+    const top = document.querySelector("#column-top");
+    top.removeEventListener("click", this.boundClick);
   }  
 
-  handleClick(evt) {    
+  handleClick(evt) {  
+
     // get x from ID of clicked cell
     const x = +evt.target.id;
   
@@ -96,16 +107,18 @@ class Game {
     
     // check for win
     if (this.checkForWin()) {
-      return this.endGame(`Player ${this.currPlayer} won!`);
+      this.gameOver = true;
+      return this.endGame(`Player ${this.currPlayer.color} won!`);
     }
     
     // check for tie
     if (this.board.every(row => row.every(cell => cell))) {
+      this.gameOver = true;      
       return this.endGame('Tie!');
     }
       
     // switch players
-    this.currPlayer = this.currPlayer === 1 ? 2 : 1;
+    this.currPlayer = this.currPlayer === this.players[0] ? this.players[1] : this.players[0];
   }
 
   checkForWin() {
@@ -282,5 +295,18 @@ function handleClick(evt) {
   }
 } */
 
-new Game(6,7);
+class Player {
+  constructor(color) {
+    this.color = color;
+  }
+}
+
+
+
+document.querySelector("#start").addEventListener("click", () => {
+  let player1 = new Player(document.querySelector("#color1").value);
+  let player2 = new Player(document.querySelector("#color2").value);
+
+  new Game(player1,player2);
+});
 //makeHtmlBoard();
